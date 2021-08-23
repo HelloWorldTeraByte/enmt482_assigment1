@@ -1,6 +1,0 @@
-{
-    "python.linting.pylintEnabled": true,
-    "python.linting.enabled": true,
-    "debugStdLib": true,
-    "python.pythonPath": "${workspaceRoot}/../bin/python"
-}
