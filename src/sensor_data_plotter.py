@@ -47,7 +47,7 @@ seed(1) #For random number
 #*****************************************************************************
 
 # Load data
-filename = '../Assignment 1 Part(A) data and example code/calibration.csv'
+filename = '../part_a/calibration.csv'
 data = np.loadtxt(filename, delimiter=',', skiprows=1)
 
 # Split into columns
