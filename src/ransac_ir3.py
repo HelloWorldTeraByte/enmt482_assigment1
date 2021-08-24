@@ -1,3 +1,4 @@
+import time
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider, Button
@@ -6,11 +7,11 @@ from sklearn.preprocessing import PolynomialFeatures
 from sklearn.pipeline import make_pipeline
 from sklearn.metrics import mean_squared_error
 
-filename = 'calibration.csv'
+filename = '/home/helloworldterabyte/projects/enmt482-2021_robotic_assignment/src/calibration.csv'
 data = np.loadtxt(filename, delimiter=',', skiprows=1)
 
 # Split into columns
-index, time, distance, velocity_command, raw_ir1, raw_ir2, raw_ir3, raw_ir4, \
+index, time_data, distance, velocity_command, raw_ir1, raw_ir2, raw_ir3, raw_ir4, \
     sonar1, sonar2 = data.T
 
 def find_nearest_index(array, value):
@@ -18,88 +19,100 @@ def find_nearest_index(array, value):
     idx = (np.abs(array - value)).argmin()
     return idx
 
-brkpt_dist = 0.4
-brkpt = find_nearest_index(distance, brkpt_dist)
+class IR3SensorModel(object):
+    def __init__(self, distance, measurement, polynomial_order=2, segment_point=0.4):
+        self.distance = distance
+        self.measurement = measurement
+        self.brkpt_dist = segment_point
+        self.poly_order = polynomial_order
 
-lin_dist = distance[0:brkpt]
-lin_meas = raw_ir3[0:brkpt]
+        self.brkpt = find_nearest_index(self.distance, self.brkpt_dist)
 
-poly_dist = distance
-poly_meas = raw_ir3
+        self.lin_dist = distance[0:self.brkpt]
+        self.lin_meas = raw_ir3[0:self.brkpt]
 
-lin_ransac = RANSACRegressor(random_state=1)
-lin_ransac.fit(lin_dist.reshape(-1,1), lin_meas)
-lin_pred = lin_ransac.predict(lin_dist.reshape(-1,1))
-lin_inlier_mask = lin_ransac.inlier_mask_
-lin_outlier_mask = np.logical_not(lin_inlier_mask)
+        self.poly_dist = distance
+        self.poly_meas = raw_ir3
 
-poly_ransac = make_pipeline(PolynomialFeatures(2), RANSACRegressor(random_state=1))
-poly_ransac.fit(poly_dist.reshape(-1,1), poly_meas)
-#mse = mean_squared_error(ransac.predict(distance.reshape(-1,1)), raw_ir3)
-poly_pred = poly_ransac.predict(poly_dist.reshape(-1,1))
-poly_inlier_mask = poly_ransac.steps[1][1].inlier_mask_
-poly_outlier_mask = np.logical_not(poly_inlier_mask)
+        self.lin_ransac = RANSACRegressor(random_state=1)
+        self.poly_ransac = make_pipeline(PolynomialFeatures(self.poly_order), RANSACRegressor(random_state=1))
 
-lin_dist_inlier = np.delete(lin_dist, lin_outlier_mask)
-lin_meas_inlier = np.delete(lin_meas, lin_outlier_mask)
+        self.plots_init()
+        self.calculate()
+        self.plots_draw()
+    
+    def segment_point_update(self, val):
+        self.brkpt = find_nearest_index(self.distance, self.brkpt_slider.val)
+        self.calculate()
+        self.plots_draw()
 
-poly_dist_inlier = np.delete(poly_dist, poly_outlier_mask)
-poly_meas_inlier = np.delete(poly_meas, poly_outlier_mask)
+    def calculate(self):
+        self.lin_dist = distance[0:self.brkpt]
+        self.lin_meas = raw_ir3[0:self.brkpt]
 
-dist_inlier = (np.concatenate((lin_dist_inlier, poly_dist_inlier)))
-meas_inlier = (np.concatenate((lin_meas_inlier, poly_meas_inlier)))
+        self.poly_dist = distance
+        self.poly_meas = raw_ir3
 
-pred_inlier = np.piecewise(dist_inlier, [dist_inlier < 0.4, dist_inlier >= 0.4], \
-    [lambda dist_inlier: lin_ransac.predict(dist_inlier.reshape(-1,1)), \
-        lambda dist_inlier: poly_ransac.predict(dist_inlier.reshape(-1,1))])
+        self.lin_ransac.fit(self.lin_dist.reshape(-1,1), self.lin_meas)
+        self.lin_pred = self.lin_ransac.predict(self.lin_dist.reshape(-1,1))
+        self.lin_inlier_mask = self.lin_ransac.inlier_mask_
+        self.lin_outlier_mask = np.logical_not(self.lin_inlier_mask)
 
-error_inlier = meas_inlier - pred_inlier
+        self.poly_ransac.fit(self.poly_dist.reshape(-1,1), self.poly_meas)
+        #self.mse = mean_squared_error(ransac.predict(distance.reshape(-1,1)), raw_ir3)
+        self.poly_pred = self.poly_ransac.predict(self.poly_dist.reshape(-1,1))
+        self.poly_inlier_mask = self.poly_ransac.steps[1][1].inlier_mask_
+        self.poly_outlier_mask = np.logical_not(self.poly_inlier_mask)
 
-plt.figure()
-plt.title("Inliers of Ir3")
-plt.scatter(distance, raw_ir3, linewidths=0.1)
-plt.scatter(dist_inlier, meas_inlier, linewidths=0.1)
+        self.lin_dist_inlier = np.delete(self.lin_dist, self.lin_outlier_mask)
+        self.lin_meas_inlier = np.delete(self.lin_meas, self.lin_outlier_mask)
 
-fig_err, ax_err = plt.subplots(2)
-fig_err.suptitle("Errors")
-ax_err[0].scatter(dist_inlier, error_inlier)
-ax_err[1].hist(error_inlier, 100)
+        self.poly_dist_inlier = np.delete(self.poly_dist, self.poly_outlier_mask)
+        self.poly_meas_inlier = np.delete(self.poly_meas, self.poly_outlier_mask)
+
+        self.dist_inlier = np.concatenate((self.lin_dist_inlier, self.poly_dist_inlier))
+        self.meas_inlier = np.concatenate((self.lin_meas_inlier, self.poly_meas_inlier))
+
+        self.pred_inlier = np.piecewise(self.dist_inlier, [self.dist_inlier < 0.4, self.dist_inlier >= 0.4],
+                                        [lambda dist_inlier: self.lin_ransac.predict(dist_inlier.reshape(-1, 1)),
+                                         lambda dist_inlier: self.poly_ransac.predict(dist_inlier.reshape(-1, 1))])
+
+        self.error_inlier = self.meas_inlier - self.pred_inlier
+
+    def plots_init(self):
+
+        self.inliers_fig, self.inliers_ax = plt.subplots()
+        plt.title("Inliers and Outliers of IR3")
+
+        self.err_fig, self.err_ax = plt.subplots(2)
+        plt.title("Errors")
+
+        self.ir3_fig, self.ir3_ax = plt.subplots()
+        plt.subplots_adjust(bottom=0.35)
+        plt.title("IR3")
+        self.ir3_ax_brkpt = plt.axes([0.25, 0.2, 0.65, 0.03])
+        self.brkpt_slider = Slider(self.ir3_ax_brkpt, 'Breakpoint', 0.0, 1.0, 0.4)
+        self.brkpt_slider.on_changed(self.segment_point_update)
+
+    def plots_draw(self):
+        self.inliers_ax.clear()
+        self.inliers_ax.scatter(self.distance, self.measurement, linewidths=0.1)
+        self.inliers_ax.scatter(self.dist_inlier, self.meas_inlier, linewidths=0.1)
+        self.inliers_fig.canvas.draw()
+
+        self.err_ax[0].clear()
+        self.err_ax[1].clear()
+        self.err_ax[0].scatter(self.dist_inlier, self.error_inlier)
+        self.err_ax[1].hist(self.error_inlier, 100)
+        self.err_fig.canvas.draw()
+
+        self.ir3_ax.clear()
+        self.ir3_ax.plot(self.distance, self.measurement, '.', alpha=0.2)
+        self.ir3_ax.plot(self.lin_dist, self.lin_pred, color='orange')
+        self.ir3_ax.plot(self.poly_dist, self.poly_pred, color='red')
+        self.ir3_fig.canvas.draw()
 
 
-def brkpt_update(val):
-    pass
 
-
-fig_ir3, ax_ir3 = plt.subplots()
-plt.subplots_adjust(bottom=0.35)
-
-plt.plot(distance, raw_ir3, '.', alpha=0.2)
-plt.plot(lin_dist, lin_pred, color='orange')
-plt.plot(poly_dist, poly_pred, color='red')
-
-ax_ir3_brkpt = plt.axes([0.25, 0.2, 0.65, 0.03])
-brkpt_slider = Slider(ax_ir3_brkpt, 'Breakpoint', 0.0, 1.0, 0.6)
-brkpt_slider.on_changed(brkpt_update)
-plt.title("IR3")
-fig, axes = plt.subplots(2, 3)
-fig.suptitle('Calibration data')
-
-axes[0, 0].plot(distance, raw_ir1, '.', alpha=0.2)
-axes[0, 0].set_title('IR1')
-
-axes[0, 1].plot(distance, raw_ir2, '.', alpha=0.2)
-axes[0, 1].set_title('IR2')
-
-axes[0, 2].plot(distance, raw_ir3, '.', alpha=0.2)
-axes[0, 2].set_title('IR3')
-
-axes[1, 0].plot(distance, raw_ir4, '.', alpha=0.2)
-axes[1, 0].set_title('IR4')
-
-axes[1, 1].plot(distance, sonar1, '.', alpha=0.2)
-axes[1, 1].set_title('Sonar1')
-
-axes[1, 2].plot(distance, sonar2, '.', alpha=0.2)
-axes[1, 2].set_title('Sonar2')
-
+ir3_sen = IR3SensorModel(distance, raw_ir3)
 plt.show()
