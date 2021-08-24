@@ -45,7 +45,7 @@ poly_error_inlier = poly_meas_inlier - poly_pred_inlier
 
 print("Distance", np.size(distance))
 print("Distance inlier size", np.size(poly_dist_inlier))
-print("Preditction inlier size", np.size(poly_pred_inlier))
+print("Prediction inlier size", np.size(poly_pred_inlier))
 print("Error size", np.size(poly_error_inlier))
 
 fig, axes = plt.subplots(2, 3)
