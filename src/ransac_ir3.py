@@ -7,7 +7,7 @@ from sklearn.preprocessing import PolynomialFeatures
 from sklearn.pipeline import make_pipeline
 from sklearn.metrics import mean_squared_error
 
-filename = '/home/helloworldterabyte/projects/enmt482-2021_robotic_assignment/src/calibration.csv'
+filename = 'calibration.csv'
 data = np.loadtxt(filename, delimiter=',', skiprows=1)
 
 # Split into columns
