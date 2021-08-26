@@ -140,4 +140,4 @@ plt.ylabel('Count')
 plt.xlabel('Measurement Error')
 
 show()
-#savefig(__file__.replace('.py', '.pdf'))
+savefig(__file__.replace('.py', '.pdf'))
