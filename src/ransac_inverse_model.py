@@ -44,6 +44,8 @@ ransac.fit(raw_ir3.reshape(-1,1), distance)
 print(ransac.estimator_.coeffs)
 inlier_mask = ransac.inlier_mask_
 outlier_mask = np.logical_not(inlier_mask)
+meas_inliers = np.delete(raw_ir3, outlier_mask)
+dist_inliers = np.delete(distance, outlier_mask)
 
 fig, axes = plt.subplots(2, 3)
 fig.suptitle('Calibration data')
@@ -52,17 +54,17 @@ axes[0, 0].plot(distance, raw_ir1, '.', alpha=0.2)
 axes[0, 0].set_title('IR1')
 
 axes[0, 1].plot(distance, raw_ir2, '.', alpha=0.2)
-axes[0, 1].plot(distance, ransac.predict(distance.reshape(-1,1)))
 axes[0, 1].set_title('IR2')
 
 axes[0, 2].plot(distance, raw_ir3, '.', alpha=0.2)
+axes[0, 2].plot(distance, ransac.predict(distance.reshape(-1,1)))
+axes[0, 2].scatter(dist_inliers, meas_inliers)
 axes[0, 2].set_title('IR3')
 
 axes[1, 0].plot(distance, raw_ir4, '.', alpha=0.2)
 axes[1, 0].set_title('IR4')
 
 axes[1, 1].plot(distance, sonar1, '.', alpha=0.2)
-#axes[1, 1].plot(distance, ransac.predict(distance))
 axes[1, 1].set_title('Sonar1')
 
 axes[1, 2].plot(distance, sonar2, '.', alpha=0.2)
