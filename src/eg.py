@@ -1,1 +1,0 @@
-# Display Michael Code here for side-to-side comparison
