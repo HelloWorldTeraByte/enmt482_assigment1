@@ -33,7 +33,6 @@ class IR4SensorModel(object):
     def calculate(self):
         self.distance_sorted, self.measurement_sorted = zip(*sorted(zip(self.distance, self.measurement)))
         self.spline = splrep(self.distance_sorted, self.measurement_sorted, s=self.smooth_val)
-        print(self.spline)
 
         #self.spline_dist = np.linspace(0.05, 3.5, 500)
         self.spline_meas = splev(self.distance, self.spline)
