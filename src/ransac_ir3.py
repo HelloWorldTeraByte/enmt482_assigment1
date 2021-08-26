@@ -39,8 +39,8 @@ class IR3SensorModel(object):
         self.poly_dist = self.distance
         self.poly_meas = self.distance
 
-        self.lin_ransac1 = RANSACRegressor(random_state=1)
-        self.lin_ransac2 = RANSACRegressor(random_state=1)
+        self.lin_ransac1 = make_pipeline(PolynomialFeatures(self.poly_order), RANSACRegressor(random_state=1))
+        self.lin_ransac2 = make_pipeline(PolynomialFeatures(self.poly_order), RANSACRegressor(random_state=1))
         self.poly_ransac = make_pipeline(PolynomialFeatures(self.poly_order), RANSACRegressor(random_state=1))
 
         self.plots_init()
@@ -65,12 +65,12 @@ class IR3SensorModel(object):
 
         self.lin_ransac1.fit(self.lin_dist1.reshape(-1,1), self.lin_meas1)
         self.lin_pred1 = self.lin_ransac1.predict(self.lin_dist1.reshape(-1,1))
-        self.lin_inlier_mask1 = self.lin_ransac1.inlier_mask_
+        self.lin_inlier_mask1 = self.lin_ransac1.steps[1][1].inlier_mask_
         self.lin_outlier_mask1 = np.logical_not(self.lin_inlier_mask1)
 
         self.lin_ransac2.fit(self.lin_dist2.reshape(-1,1), self.lin_meas2)
         self.lin_pred2 = self.lin_ransac2.predict(self.lin_dist2.reshape(-1,1))
-        self.lin_inlier_mask2 = self.lin_ransac2.inlier_mask_
+        self.lin_inlier_mask2 = self.lin_ransac2.steps[1][1].inlier_mask_
         self.lin_outlier_mask2 = np.logical_not(self.lin_inlier_mask2)
 
         self.poly_ransac.fit(self.poly_dist.reshape(-1,1), self.poly_meas)
