@@ -1,4 +1,3 @@
-import time
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider, Button
@@ -20,7 +19,7 @@ def find_nearest_index(array, value):
     return idx
 
 class IR3SensorModel(object):
-    def __init__(self, distance, measurement, polynomial_order=2, segment_point1=0.2, segment_point2=0.4):
+    def __init__(self, distance, measurement, polynomial_order=2, segment_point1=0.21, segment_point2=0.54):
         self.distance = distance
         self.measurement = measurement
         self.brkpt_dist1 = segment_point1
@@ -29,15 +28,6 @@ class IR3SensorModel(object):
 
         self.brkpt1 = find_nearest_index(self.distance, self.brkpt_dist1)
         self.brkpt2 = find_nearest_index(self.distance, self.brkpt_dist2)
-
-        self.lin_dist1 = self.distance[0:self.brkpt1]
-        self.lin_meas1 = self.measurement[0:self.brkpt1]
-
-        self.lin_dist2 = self.distance[self.brkpt1:self.brkpt2]
-        self.lin_meas2 = self.measurement[self.brkpt1:self.brkpt2]
-
-        self.poly_dist = self.distance
-        self.poly_meas = self.distance
 
         self.lin_ransac1 = make_pipeline(PolynomialFeatures(self.poly_order), RANSACRegressor(random_state=1))
         self.lin_ransac2 = make_pipeline(PolynomialFeatures(self.poly_order), RANSACRegressor(random_state=1))
@@ -54,14 +44,14 @@ class IR3SensorModel(object):
         self.plots_draw()
 
     def calculate(self):
-        self.lin_dist1 = self.distance[0:self.brkpt1]
-        self.lin_meas1 = self.measurement[0:self.brkpt1]
+        self.lin_dist1 = self.distance[0:self.brkpt1+100]
+        self.lin_meas1 = self.measurement[0:self.brkpt1+100]
 
-        self.lin_dist2 = self.distance[self.brkpt1:self.brkpt2]
-        self.lin_meas2 = self.measurement[self.brkpt1:self.brkpt2]
+        self.lin_dist2 = self.distance[self.brkpt1-100:self.brkpt2+100]
+        self.lin_meas2 = self.measurement[self.brkpt1-100:self.brkpt2+100]
 
-        self.poly_dist = distance
-        self.poly_meas = raw_ir3
+        self.poly_dist = self.distance
+        self.poly_meas = self.measurement
 
         self.lin_ransac1.fit(self.lin_dist1.reshape(-1,1), self.lin_meas1)
         self.lin_pred1 = self.lin_ransac1.predict(self.lin_dist1.reshape(-1,1))
@@ -74,7 +64,6 @@ class IR3SensorModel(object):
         self.lin_outlier_mask2 = np.logical_not(self.lin_inlier_mask2)
 
         self.poly_ransac.fit(self.poly_dist.reshape(-1,1), self.poly_meas)
-        #self.mse = mean_squared_error(ransac.predict(distance.reshape(-1,1)), raw_ir3)
         self.poly_pred = self.poly_ransac.predict(self.poly_dist.reshape(-1,1))
         self.poly_inlier_mask = self.poly_ransac.steps[1][1].inlier_mask_
         self.poly_outlier_mask = np.logical_not(self.poly_inlier_mask)
@@ -134,6 +123,7 @@ class IR3SensorModel(object):
         self.ir3_ax.plot(self.lin_dist1, self.lin_pred1, color='orange')
         self.ir3_ax.plot(self.lin_dist2, self.lin_pred2, color='orange')
         self.ir3_ax.plot(self.poly_dist, self.poly_pred, color='red')
+        self.ir3_ax.plot(self.dist_inlier, self.pred_inlier, color='gold')
         self.ir3_fig.canvas.draw()
 
 
