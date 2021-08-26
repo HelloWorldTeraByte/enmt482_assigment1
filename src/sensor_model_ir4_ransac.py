@@ -53,7 +53,7 @@ class IR4SensorModel(object):
         self.plots_draw()
 
     def calculate(self):
-        self.ransac = RANSACRegressor(SplineSensorRegressor(smooth=2), random_state=0, min_samples=10,residual_threshold=(median_abs_deviation(self.measurement)+0.5))
+        self.ransac = RANSACRegressor(SplineSensorRegressor(smooth=2), random_state=0, min_samples=10,residual_threshold=(median_abs_deviation(self.measurement)+0.6))
         self.ransac.fit(self.distance.reshape(-1,1), self.measurement)
         self.inlier_mask = self.ransac.inlier_mask_
         self.outlier_mask = np.logical_not(self.inlier_mask)
