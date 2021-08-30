@@ -8,7 +8,7 @@ from sklearn.preprocessing import PolynomialFeatures
 from sklearn.pipeline import make_pipeline
 from sklearn.metrics import mean_squared_error
 
-filename = 'calibration.csv'
+filename = '../data/calibration.csv'
 data = np.loadtxt(filename, delimiter=',', skiprows=1)
 
 # Split into columns
