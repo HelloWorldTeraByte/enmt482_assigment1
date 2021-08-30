@@ -34,14 +34,14 @@ import statistics
 #
 #*****************************************************************************
 
-filename_t1 = 'part_a_old/training1.csv'
+filename_t1 = 'data/training1.csv'
 data_t1 = np.loadtxt(filename_t1, delimiter=',', skiprows=1)
 
 # Split data into columns
 index_t1, time_t1, distance_t1, velocity_command_t1, raw_ir1_t1, raw_ir2_t1, raw_ir3_t1, raw_ir4_t1, \
     sonar1_t1, sonar2_t1 = data_t1.T
 
-filename_t2 = 'part_a_old/training2.csv'
+filename_t2 = 'data/training2.csv'
 data_t2 = np.loadtxt(filename_t2, delimiter=',', skiprows=1)
 
 # Split data into columns
