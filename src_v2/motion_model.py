@@ -1,35 +1,35 @@
-#########################################################################
-#        >(')____,  >(')____,  >(')____,  >(')____,  >(') ___,          #
-#         (` =~~/    (` =~~/    (` =~~/    (` =~~/    (` =~~/           #
-#    ~^~^`---'~^~^~^`---'~^~^~^`---'~^~^~^`---'~^~^~^`---'~^~^~         #
-#########################################################################
-#                                                                       #
-#                            motion_model.py                            #
-#                                                                       #
-##########################################################################
+################################################################################
+#        >(')____,  >(')____,  >(')____,  >(')____,  >(') ___,                 #
+#         (` =~~/    (` =~~/    (` =~~/    (` =~~/    (` =~~/                  #
+#    ~^~^`---'~^~^~^`---'~^~^~^`---'~^~^~^`---'~^~^~^`---'~^~^~                #
+################################################################################
+#                                                                              #
+#                            motion_model.py                                   #
+#                                                                              #
+################################################################################
 # Authors:        Jason Ui
 #                 Randipa Gunathilake
 #
 # Date created:       27/08/2021
 # Date Last Modified: 27/08/2021
-##########################################################################
+################################################################################
 #  Module Description:
 #
 #
-##########################################################################
+################################################################################
 
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import subplots, show
 import statistics
 
-##########################################################################
+################################################################################
 #
 # The following is for motion model class
 #
-##########################################################################
+################################################################################
 class MotionModel(object):
-    def __init__(self, distance, time, velocity_command, training_no=1, plot=0):
+    def __init__(self, distance, time, velocity_command, training_no=1, plot=False):
         self.distance = distance
         self.time = time
         self.velocity_cmd = velocity_command
@@ -44,7 +44,7 @@ class MotionModel(object):
         self.predicted_dist = self.curr_dist + self.motion_model + self.process_noise # x_n = x_n_1 + g + w_n
         self.training_no = training_no
         # Handle plotting
-        if plot==1:
+        if(plot):
             self.plots_init()
             self.plots_grid_init()
             self.plot_hist()
@@ -126,6 +126,6 @@ if __name__ == "__main__":
 
     motion_model_plot_t1 = MotionModel(distance_t1, time_t1, velocity_command_t1, training_no=1, plot=1)
 
-    motion_model_plot_t2 = MotionModel(distance_t2, time_t2, velocity_command_t2, training_no=2, plot=1)
+    motion_model_plot_t2 = MotionModel(distance_t2, time_t2, velocity_command_t2, training_no=2, plot=True)
 
     plt.show()
