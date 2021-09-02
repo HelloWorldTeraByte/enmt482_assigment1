@@ -39,6 +39,9 @@ class Sonar1Sensor(object):
         self.errors = self.meas_inliers - self.ransac_pred
         self.error_var = np.var(self.errors)
 
+        # TODO: Testing
+        self.error_var = 0.008
+
         if(should_plot):
             self.plots_init()
             self.plots_draw()
@@ -46,6 +49,10 @@ class Sonar1Sensor(object):
     def x_est_mle(self, z):
         x_est = (z - self.ransac.estimator_.intercept_)/self.ransac.estimator_.coef_[0]
         return x_est
+
+    def var_estimator(self):
+        var = self.error_var / (self.ransac.estimator_.coef_[0] ** 2)
+        return var
  
     def plots_init(self):
         self.liers_fig, self.liers_ax = plt.subplots()
@@ -78,6 +85,5 @@ if __name__ == "__main__":
 
     sonar1_sen = Sonar1Sensor(distance, sonar1, should_plot=True)
     print("Error Variance: ", sonar1_sen.error_var)
-    print(sonar1_sen.x_est_mle(2))
 
     plt.show()

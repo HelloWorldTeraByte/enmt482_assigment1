@@ -66,12 +66,20 @@ class Ir4Sensor(object):
 
         self.spline = self.ransac.estimator_.spline
 
+        self.dist_min = np.min(self.distance)
+        self.dist_max = np.max(self.distance)
+
         if(should_plot):
             self.plots_init()
             self.plots_draw()
 
     # Linearizing about x_0
     def x_est_mle(self, z, x_0):
+        if(x_0 < self.dist_min):
+            x_0 = self.dist_min
+        if(x_0 > self.dist_max):
+            x_0 = self.dist_max
+
         h_x0 = splev(x_0, self.spline)
         h_derv_x0 = spalde(x_0, self.spline)[1]
         c = h_derv_x0
@@ -83,6 +91,22 @@ class Ir4Sensor(object):
         x_est = (z - h_x0)/h_derv_x0 + x_0
 
         return x_est
+
+    def var_estimator_at_x0(self, x_0):
+        if(x_0 < self.dist_min):
+            x_0 = self.dist_min
+        if(x_0 > self.dist_max):
+            x_0 = self.dist_max
+
+        h_x0 = splev(x_0, self.spline)
+        h_derv_x0 = spalde(x_0, self.spline)[1]
+
+        c = h_derv_x0
+        d = h_x0 - x_0 * h_derv_x0
+
+        var = self.error_var / (c ** 2)
+
+        return var
  
     def plots_init(self):
         self.liers_fig, self.liers_ax = plt.subplots()
@@ -113,7 +137,7 @@ if __name__ == "__main__":
     index, time_data, distance, velocity_command, \
         raw_ir1, raw_ir2, raw_ir3, raw_ir4, sonar1, sonar2 = data.T
 
-
     ir4_sen = Ir4Sensor(distance, raw_ir4, should_plot=True)
     print("Error Variance: ", ir4_sen.error_var)
+
     plt.show()

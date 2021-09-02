@@ -68,6 +68,9 @@ class Ir3Sensor(object):
 
         self.spline = self.ransac.estimator_.spline
 
+        self.dist_min = np.min(self.distance)
+        self.dist_max = np.max(self.distance)
+
         self.func_offset = lambda x, a : splev(x, self.spline) - a
 
         self.inv_x = []
@@ -99,6 +102,11 @@ class Ir3Sensor(object):
 
     # Linearizing about x_0
     def x_est_mle(self, z, x_0):
+        if(x_0 < self.dist_min):
+            x_0 = self.dist_min
+        if(x_0 > self.dist_max):
+            x_0 = self.dist_max
+
         h_x0 = splev(x_0, self.spline)
         h_derv_x0 = spalde(x_0, self.spline)[1]
         c = h_derv_x0
@@ -110,6 +118,22 @@ class Ir3Sensor(object):
         x_est = (z - h_x0)/h_derv_x0 + x_0
 
         return x_est
+
+    def var_estimator_at_x0(self, x_0):
+        if(x_0 < self.dist_min):
+            x_0 = self.dist_min
+        if(x_0 > self.dist_max):
+            x_0 = self.dist_max
+
+        h_x0 = splev(x_0, self.spline)
+        h_derv_x0 = spalde(x_0, self.spline)[1]
+
+        c = h_derv_x0
+        d = h_x0 - x_0 * h_derv_x0
+
+        var = self.error_var / (c ** 2)
+
+        return var
     
     def plots_init(self):
         self.liers_fig, self.liers_ax = plt.subplots()
@@ -152,8 +176,9 @@ if __name__ == "__main__":
         raw_ir1, raw_ir2, raw_ir3, raw_ir4, sonar1, sonar2 = data.T
 
     ir3_sen = Ir3Sensor(distance, raw_ir3, should_plot=False)
-    print(ir3_sen.x_est_mle(0.8, 0.4))
+    print(ir3_sen.x_est_mle(3.12, 0.1))
     print("Error Variance: ", ir3_sen.error_var)
+
     ir3_sen.plots_init()
     ir3_sen.plots_draw()
 
