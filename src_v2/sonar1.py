@@ -42,7 +42,11 @@ class Sonar1Sensor(object):
         if(should_plot):
             self.plots_init()
             self.plots_draw()
-    
+
+    def x_est_mle(self, z):
+        x_est = (z - self.ransac.estimator_.intercept_)/self.ransac.estimator_.coef_[0]
+        return x_est
+ 
     def plots_init(self):
         self.liers_fig, self.liers_ax = plt.subplots()
         plt.title("Inliers and Outliers")
@@ -74,5 +78,6 @@ if __name__ == "__main__":
 
     sonar1_sen = Sonar1Sensor(distance, sonar1, should_plot=True)
     print("Error Variance: ", sonar1_sen.error_var)
+    print(sonar1_sen.x_est_mle(2))
 
     plt.show()
