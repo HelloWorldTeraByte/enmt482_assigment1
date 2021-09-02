@@ -17,11 +17,8 @@
 #
 #
 ################################################################################
-
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.pyplot import subplots, show
-import statistics
 
 ################################################################################
 #
@@ -40,7 +37,7 @@ class MotionModel(object):
         self.curr_cmd_velocity = self.velocity_cmd[0:-1]    # u_n_1
         self.motion_model = self.curr_cmd_velocity * self.dt    # g = u_n_1 * dt
         self.process_noise = self.next_dist - self.curr_dist - self.motion_model # w_n = x_n - x_n_1 - g
-        self.process_noise_var = statistics.variance(self.process_noise, xbar=None)   # sigma_squared_w
+        self.process_noise_var = np.var(self.process_noise)   # sigma_squared_w
         self.predicted_dist = self.curr_dist + self.motion_model + self.process_noise # x_n = x_n_1 + g + w_n
         self.training_no = training_no
         # Handle plotting
@@ -50,7 +47,7 @@ class MotionModel(object):
             self.plot_hist()
 
     def plots_init(self):
-        self.fig, self.axes = subplots(2)
+        self.fig, self.axes = plt.subplots(2)
         self.axes[0].plot(self.time, self.velocity_cmd, label='command speed')
         self.axes[0].plot(self.time, self.velocity_est, label='estimated speed')
         self.axes[0].legend()
@@ -124,7 +121,7 @@ if __name__ == "__main__":
     index_t2, time_t2, distance_t2, velocity_command_t2, raw_ir1_t2, raw_ir2_t2, raw_ir3_t2, raw_ir4_t2, \
         sonar1_t2, sonar2_t2 = data_t2.T
 
-    motion_model_plot_t1 = MotionModel(distance_t1, time_t1, velocity_command_t1, training_no=1, plot=1)
+    motion_model_plot_t1 = MotionModel(distance_t1, time_t1, velocity_command_t1, training_no=1, plot=True)
 
     motion_model_plot_t2 = MotionModel(distance_t2, time_t2, velocity_command_t2, training_no=2, plot=True)
 
