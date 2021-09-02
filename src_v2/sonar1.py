@@ -40,7 +40,10 @@ class Sonar1Sensor(object):
         self.error_var = np.var(self.errors)
 
         # TODO: Testing
-        self.error_var = 0.008
+        self.ransac_pred2 = self.ransac.predict(self.distance.reshape(-1,1))
+        self.errors2 = self.measurement - self.ransac_pred2
+        self.error_var2 = np.var(self.errors2)
+        self.error_var = self.error_var2
 
         if(should_plot):
             self.plots_init()
