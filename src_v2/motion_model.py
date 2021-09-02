@@ -130,6 +130,8 @@ if __name__ == "__main__":
     motion_model_plot_t1 = MotionModel(distance_t1, time_t1, velocity_command_t1, training_no=1, plot=True)
     motion_model_plot_t2 = MotionModel(distance_t2, time_t2, velocity_command_t2, training_no=2, plot=True)
 
-    print(motion_model_plot_c.process_noise_var)
+    print("Calibration Process Variance: ", motion_model_plot_c.process_noise_var)
+    print("Training 1 Process Variance: ", motion_model_plot_t1.process_noise_var)
+    print("Training 2 Process Variance: ", motion_model_plot_t2.process_noise_var)
 
     plt.show()
