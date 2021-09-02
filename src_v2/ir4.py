@@ -21,7 +21,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.linear_model import RANSACRegressor
 from scipy.interpolate import splev, splrep
-from scipy.stats import median_abs_deviation
+from scipy.interpolate.fitpack import spalde
 from sklearn.metrics import mean_squared_error
 
 ir4_smooth_val = 50
@@ -64,10 +64,26 @@ class Ir4Sensor(object):
         self.errors = self.meas_inliers - self.ransac_pred
         self.error_var = np.var(self.errors)
 
+        self.spline = self.ransac.estimator_.spline
+
         if(should_plot):
             self.plots_init()
             self.plots_draw()
-    
+
+    # Linearizing about x_0
+    def x_est_mle(self, z, x_0):
+        h_x0 = splev(x_0, self.spline)
+        h_derv_x0 = spalde(x_0, self.spline)[1]
+        c = h_derv_x0
+        d = h_x0 - x_0 * h_derv_x0
+
+        self.test_x = np.linspace(0, 1, 100)
+        self.test_y = c * self.test_x + d
+
+        x_est = (z - h_x0)/h_derv_x0 + x_0
+
+        return x_est
+ 
     def plots_init(self):
         self.liers_fig, self.liers_ax = plt.subplots()
         plt.title("Inliers and Outliers")
