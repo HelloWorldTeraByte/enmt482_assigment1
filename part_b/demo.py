@@ -6,15 +6,15 @@ University of Canterbury
 """
 
 from __future__ import print_function, division
+import numpy as np
+from transform import *
+from plot import *
+from utils import *
+from models import motion_model, sensor_model
 from numpy.random import uniform
 import matplotlib
 # May need to comment out following line for MacOS
 matplotlib.use("TkAgg")
-from models import motion_model, sensor_model
-from utils import *
-from plot import *
-from transform import *
-import numpy as np
 
 
 # Load data
@@ -22,7 +22,7 @@ import numpy as np
 # data is a (many x 13) matrix. Its columns are:
 # time_ns, velocity_command, rotation_command, map_x, map_y, map_theta, odom_x, odom_y, odom_theta,
 # beacon_ids, beacon_x, beacon_y, beacon_theta
-data = np.genfromtxt('data.csv', delimiter=',', skip_header=1)
+data = np.genfromtxt('part_b/data.csv', delimiter=',', skip_header=1)
 
 # Time in ns
 t = data[:, 0]
@@ -46,7 +46,7 @@ beacon_visible = beacon_ids >= 0
 
 # map_data is a 16x13 matrix.  Its columns are:
 # beacon_ids, x, y, theta, (9 columns of covariance)
-map_data = np.genfromtxt('beacon_map.csv', delimiter=',', skip_header=1)
+map_data = np.genfromtxt('part_b/beacon_map.csv', delimiter=',', skip_header=1)
 
 Nbeacons = map_data.shape[0]
 beacon_locs = np.zeros((Nbeacons, 3))
@@ -68,7 +68,7 @@ axes = fig.add_subplot(111)
 plot_beacons(axes, beacon_locs, label='Beacons')
 plot_path(axes, slam_poses, '-', label='SLAM')
 # Uncomment to show odometry when debugging
-#plot_path(axes, odom_poses, 'b:', label='Odom')
+plot_path(axes, odom_poses, 'b:', label='Odom')
 
 axes.legend(loc='lower right')
 
@@ -90,7 +90,7 @@ start_step = 50
 Nparticles = 100
 
 # TODO: How many steps between display updates
-display_steps = 10
+display_steps = 30
 
 # TODO: Set initial belief
 start_pose = slam_poses[start_step]
@@ -127,7 +127,7 @@ for n in range(start_step + 1, Nposes):
         beacon_pose = beacon_poses[n]
 
         # TODO: write sensor model function
-        weights *= sensor_model(poses, beacon_pose, beacon_loc)
+        weights *= 1  # sensor_model(poses, beacon_pose, beacon_loc)
 
         if sum(weights) < 1e-50:
             print('All weights are close to zero, you are lost...')
@@ -141,17 +141,19 @@ for n in range(start_step + 1, Nposes):
     est_poses[n] = poses.mean(axis=0)
 
     if n > display_step_prev + display_steps:
-        print(n)
+        # print(n)
 
         # Show particle cloud
         plot_particles(axes, poses, weights)
 
         # Leave breadcrumbs showing current odometry
-        # plot_path(axes, odom_poses[n], 'k.')
+        plot_path(axes, odom_poses[n], 'k.', label='current odometry')
+        axes.legend(loc='lower right')
 
         # Show mean estimate
-        plot_path_with_visibility(axes, est_poses[display_step_prev-1 : n+1],
-                                  '-', visibility=beacon_visible[display_step_prev-1 : n+1])
+        plot_path_with_visibility(axes, est_poses[display_step_prev-1: n+1],
+                                  '-', visibility=beacon_visible[display_step_prev-1: n+1], label="mean est")
+        axes.legend(loc='lower right')
         display_step_prev = n
 
 # Display final plot
