@@ -10,7 +10,10 @@ from numpy import cos, sin, tan, arccos, arcsin, arctan2, sqrt, exp, pi
 from numpy.random import randn, normal
 from utils import gauss, wraptopi, angle_difference
 from scipy.stats import norm
+import math 
 
+def angdiff(A, B):
+    return min((2 * math.pi) - (A - B), A - B)
 
 def motion_model(particle_poses, speed_command, odom_pose, odom_pose_prev, dt):
     """Apply motion model and return updated array of particle_poses.
@@ -50,41 +53,36 @@ def motion_model(particle_poses, speed_command, odom_pose, odom_pose_prev, dt):
 
     local_pose_change_vector = np.zeros((M, 3))
 
-    odom_pose_change_y = (odom_pose[1] - odom_pose_prev[1])
-    odom_pose_change_x = odom_pose[0] - odom_pose_prev[0]
+    odom_dy = (odom_pose[1] - odom_pose_prev[1])
+    odom_dx = (odom_pose[0] - odom_pose_prev[0])
     
-    rot_before_local = np.arctan2(odom_pose_change_y,odom_pose_change_x) - odom_pose_prev[2]
+    rot_before_local = arctan2(odom_dy,odom_dx) - odom_pose_prev[2]
     rot_after_local = odom_pose[2] - odom_pose_prev[2] - rot_before_local
-    translation_local = sqrt(odom_pose_change_y**2 + odom_pose_change_x**2)
+    translation_local = sqrt(odom_dy**2 + odom_dx**2)
 
     local_pose_change_vector = np.array((translation_local, rot_before_local, rot_after_local))
     global_pose_change_vector = local_pose_change_vector #.transpose()
 
-    # global_pose_change_PDF = normal(loc=local_pose_change_vector[1], scale=local_pose_change_vector[0], size=1) \
-    # * normal(loc=global_pose_change_vector[0], scale=local_pose_change_vector[0], size=1) \
-    # * normal(loc=global_pose_change_vector[2], scale=local_pose_change_vector[0], size=1)
-
-    # Probabilisitc Odometry Motion Sensor
-    # (40, 0.1, 0.01, 1) - follows path but soon loses path
-    # (5, 20, 50, 0.1) - very bad
-    # (80, 1, 0.1, 5) - follows path but fizzling
-    # (40, 1, 0.1, 1) - similar to first but broken
-    # (50, 0.2, 0.02, 2)
-    alpha = np.array((50, 0.2, 0.02, 2))
+    # Probabilistic Odometry Motion Model Extension
+    alpha = np.array((0.001, 0.001, 0.001, 0.001))
 
     translation_std = (alpha[2] * (abs(global_pose_change_vector[1]) + abs(global_pose_change_vector[2]))) + (alpha[3]* global_pose_change_vector[0])
     bearing_before_std = (alpha[0] * abs(global_pose_change_vector[1])) + (alpha[1]* global_pose_change_vector[0])
     bearing_after_std = (alpha[0] * abs(global_pose_change_vector[2])) + (alpha[1]* global_pose_change_vector[0])
 
-    global_pose_change_vector[0] = normal(loc=global_pose_change_vector[0], scale=translation_std, size=1)
-    global_pose_change_vector[1] = normal(loc=global_pose_change_vector[1], scale=bearing_before_std, size=1)
-    global_pose_change_vector[2] = normal(loc=global_pose_change_vector[2], scale=bearing_after_std, size=1)
+    # Method A
+    global_pose_change_vector[0] += normal(loc=0, scale=translation_std, size=1)
+    global_pose_change_vector[1] += normal(loc=0, scale=bearing_before_std, size=1)
+    global_pose_change_vector[2] += normal(loc=0, scale=bearing_after_std, size=1)
 
     for m in range(M):
-        particle_poses[m, 0] += global_pose_change_vector[0] * cos(odom_pose_prev[2] + global_pose_change_vector[1])
-        particle_poses[m, 1] += global_pose_change_vector[0] * sin(odom_pose_prev[2] + global_pose_change_vector[1])
+
+        particle_poses[m, 0] += global_pose_change_vector[0] * cos(particle_poses[m, 2] + global_pose_change_vector[1])
+        particle_poses[m, 1] += global_pose_change_vector[0] * sin(particle_poses[m, 2] + global_pose_change_vector[1])
         particle_poses[m, 2] += global_pose_change_vector[1] + global_pose_change_vector[2]
 
+        # particle_poses[m, 0] += randn(1) * 0.1
+        # particle_poses[m, 0] += randn(1) * 0.1
         # particle_poses[m, 0] += randn(1) * 0.1
         # particle_poses[m, 1] -= 0.1
     
@@ -133,8 +131,19 @@ def sensor_model(particle_poses, beacon_pose, beacon_loc):
         beacon_range = sqrt(beacon_pose[0]**2 + beacon_pose[1]**2)
         beacon_bearing = arctan2(beacon_pose[1], beacon_pose[0])
 
-        range_error_pdf = norm.pdf(beacon_range - particle_range)
-        bearing_error_pdf = norm.pdf(angdiff(beacon_bearing, particle_bearing))
+        range_error = beacon_range - particle_range
+        bearing_error = angdiff(beacon_bearing, particle_bearing)
+
+        #uncomment for large standard deviation
+        # range_error *= 2
+        # bearing_error *= 2
+
+        #uncomment for small standard deviation
+        # range_error *= 0.1
+        # bearing_error *= 0.1
+
+        range_error_pdf = norm.pdf(range_error)
+        bearing_error_pdf = norm.pdf(bearing_error)
 
         particle_weights[m] *= range_error_pdf * bearing_error_pdf
 
