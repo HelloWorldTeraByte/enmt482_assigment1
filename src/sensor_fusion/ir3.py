@@ -19,7 +19,6 @@
 ################################################################################
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy import optimize
 from scipy.interpolate.fitpack import spalde
 from sklearn.linear_model import RANSACRegressor
 from scipy.interpolate import splev, splrep
@@ -68,9 +67,9 @@ class Ir3Sensor(object):
         self.meas_inliers = np.delete(self.measurement, self.outlier_mask)
         self.dist_inliers = np.delete(self.distance, self.outlier_mask)
 
-        self.ransac_pred = self.ransac.predict(self.dist_inliers.reshape(-1,1))
-        self.errors = self.meas_inliers - self.ransac_pred
-        self.error_var = np.var(self.errors)
+        self.model_pred = self.ransac.predict(self.dist_inliers.reshape(-1,1))
+        self.model_err = self.meas_inliers - self.model_pred
+        self.model_err_var = np.var(self.model_err)
 
         bin_dist = 0.1
         s = 0
@@ -95,7 +94,6 @@ class Ir3Sensor(object):
         self.err_spline_x = np.linspace(self.dist_min, self.dist_max, 100)
         self.err_spline = splrep(self.bin_err_var_x, self.bin_err_var)
         self.err_spline_y = splev(self.err_spline_x, self.err_spline)
-
 
         if(should_plot):
             self.plots_init()
@@ -158,12 +156,12 @@ class Ir3Sensor(object):
         self.liers_ax.scatter(self.distance, self.measurement)
         self.liers_ax.scatter(self.dist_inliers, self.meas_inliers)
 
-        self.err_ax[0].scatter(self.dist_inliers, self.errors)
-        self.err_ax[1].hist(self.errors, 100)
+        self.err_ax[0].scatter(self.dist_inliers, self.model_err)
+        self.err_ax[1].hist(self.model_err, 100)
 
         self.sensor_ax.plot(self.distance, self.measurement, '.')
         self.sensor_ax.plot(self.test_x, self.test_y)
-        self.sensor_ax.plot(self.dist_inliers, self.ransac_pred, color='red', linewidth=2)
+        self.sensor_ax.plot(self.dist_inliers, self.model_pred, color='red', linewidth=2)
 
         self.bin_err.plot(self.bin_err_var_x, self.bin_err_var)
         self.bin_err.plot(self.err_spline_x, self.err_spline_y)
@@ -178,7 +176,7 @@ if __name__ == "__main__":
 
     ir3_sen = Ir3Sensor(distance, raw_ir3, should_plot=False)
     print(ir3_sen.x_est_mle(3.12, 0.1))
-    print("Error Variance: ", ir3_sen.error_var)
+    print("Error Variance: ", ir3_sen.model_err_var)
 
     ir3_sen.plots_init()
     ir3_sen.plots_draw()

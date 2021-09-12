@@ -40,14 +40,14 @@ class Sonar1Sensor(object):
         self.meas_inliers = np.delete(self.measurement, self.outlier_mask)
         self.dist_inliers = np.delete(self.distance, self.outlier_mask)
 
-        self.ransac_pred = self.ransac.predict(self.dist_inliers.reshape(-1,1))
-        self.errors = self.meas_inliers - self.ransac_pred
+        self.model_pred_inliers = self.ransac.predict(self.dist_inliers.reshape(-1,1))
+        self.model_err_inliers = self.meas_inliers - self.model_pred_inliers
         #self.error_var = np.var(self.errors)
 
         self.model_pred = self.ransac.predict(self.distance.reshape(-1,1))
         self.model_err = self.measurement - self.model_pred
         self.model_err_var = np.var(self.model_err)
-        self.error_var = self.model_err_var
+        self.model_error_var = self.model_err_var
 
         bin_dist = 0.1
         s = 0
@@ -103,11 +103,11 @@ class Sonar1Sensor(object):
         self.liers_ax.scatter(self.distance, self.measurement, s=10)
         self.liers_ax.scatter(self.dist_inliers, self.meas_inliers, s=10)
 
-        self.err_ax[0].scatter(self.dist_inliers, self.errors)
-        self.err_ax[1].hist(self.errors, 100)
+        self.err_ax[0].scatter(self.dist_inliers, self.model_err_inliers)
+        self.err_ax[1].hist(self.model_err_inliers, 100)
 
         self.sensor_ax.plot(self.distance, self.measurement, '.')
-        self.sensor_ax.plot(self.dist_inliers, self.ransac_pred, color='red', linewidth=2)
+        self.sensor_ax.plot(self.dist_inliers, self.model_pred_inliers, color='red', linewidth=2)
 
         self.bin_err.plot(self.bin_err_var_x, self.bin_err_var)
         self.bin_err.plot(self.err_spline_x, self.err_spline_y)
@@ -122,6 +122,6 @@ if __name__ == "__main__":
         raw_ir1, raw_ir2, raw_ir3, raw_ir4, sonar1, sonar2 = data.T
 
     sonar1_sen = Sonar1Sensor(distance, sonar1, should_plot=True)
-    print("Error Variance: ", sonar1_sen.error_var)
+    print("Error Variance: ", sonar1_sen.model_error_var)
 
     plt.show()
