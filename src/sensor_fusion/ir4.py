@@ -59,6 +59,7 @@ class Ir4Sensor(object):
         self.ransac = RANSACRegressor(Ir4Regressor(), random_state=0, min_samples=1000)
 
         self.ransac.fit(self.distance.reshape(-1,1), self.measurement)
+        self.spline = self.ransac.estimator_.spline
         self.inlier_mask = self.ransac.inlier_mask_
         self.outlier_mask = np.logical_not(self.inlier_mask)
 
@@ -92,8 +93,6 @@ class Ir4Sensor(object):
         self.err_spline_x = np.linspace(self.dist_min, self.dist_max, 100)
         self.err_spline = splrep(self.bin_err_var_x, self.bin_err_var)
         self.err_spline_y = splev(self.err_spline_x, self.err_spline)
-
-        self.spline = self.ransac.estimator_.spline
 
         self.dist_min = np.min(self.distance)
         self.dist_max = np.max(self.distance)

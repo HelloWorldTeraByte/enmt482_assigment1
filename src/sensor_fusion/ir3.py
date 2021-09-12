@@ -61,6 +61,7 @@ class Ir3Sensor(object):
         self.ransac = RANSACRegressor(Ir3Regressor(), random_state=0, min_samples=1000,residual_threshold=(median_abs_deviation(self.measurement)+0.5))
 
         self.ransac.fit(self.distance.reshape(-1,1), self.measurement)
+        self.spline = self.ransac.estimator_.spline
         self.inlier_mask = self.ransac.inlier_mask_
         self.outlier_mask = np.logical_not(self.inlier_mask)
 
@@ -95,35 +96,6 @@ class Ir3Sensor(object):
         self.err_spline = splrep(self.bin_err_var_x, self.bin_err_var)
         self.err_spline_y = splev(self.err_spline_x, self.err_spline)
 
-        self.spline = self.ransac.estimator_.spline
-
-        self.dist_min = np.min(self.distance)
-        self.dist_max = np.max(self.distance)
-
-        self.func_offset = lambda x, a : splev(x, self.spline) - a
-
-        self.inv_x = []
-        self.inv_y = []
-
-        for y in np.linspace(0.5, 3, 1000):
-            try:
-                x = optimize.newton(self.func_offset, 0.25, args=(y,))
-                self.inv_x = np.append(self.inv_x, x)
-                self.inv_y = np.append(self.inv_y, y)
-            except:
-                pass
-
-        self.inv_spline = splrep(self.inv_y, self.inv_x)
-
-        self.inv_pred_y = np.linspace(0.25, 3, 100)
-        self.inv_pred_x = splev(self.inv_pred_y, self.inv_spline)
-
-        self.err_norm_inv_x = np.linspace(0.25, 3, 1000)
-        self.err_norm_inv = np.zeros(1000)
-
-        for i in range(np.size(self.err_norm_inv_x)):
-            normal_pred = self.ransac.predict(self.err_norm_inv_x[i].reshape(-1,1)) 
-            self.err_norm_inv[i] = self.err_norm_inv_x[i] - splev(normal_pred, self.inv_spline)
 
         if(should_plot):
             self.plots_init()
@@ -179,12 +151,6 @@ class Ir3Sensor(object):
         self.sensor_fig, self.sensor_ax = plt.subplots()
         plt.title("IR3")
 
-        self.inv_model_fig, self.inv_model_ax = plt.subplots()
-        plt.title("Inverse model")
-
-        self.inv_model_err_fig, self.inv_model_err_ax = plt.subplots()
-        plt.title("Inverse model errors")
-
         self.bin_err, self.bin_err = plt.subplots()
         plt.title("Bin Errors")
 
@@ -198,10 +164,6 @@ class Ir3Sensor(object):
         self.sensor_ax.plot(self.distance, self.measurement, '.')
         self.sensor_ax.plot(self.test_x, self.test_y)
         self.sensor_ax.plot(self.dist_inliers, self.ransac_pred, color='red', linewidth=2)
-
-        self.inv_model_ax.plot(self.inv_pred_y, self.inv_pred_x)
-
-        self.inv_model_err_ax.plot(self.err_norm_inv_x, self.err_norm_inv)
 
         self.bin_err.plot(self.bin_err_var_x, self.bin_err_var)
         self.bin_err.plot(self.err_spline_x, self.err_spline_y)

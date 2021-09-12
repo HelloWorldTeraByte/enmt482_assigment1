@@ -42,13 +42,12 @@ class Sonar1Sensor(object):
 
         self.ransac_pred = self.ransac.predict(self.dist_inliers.reshape(-1,1))
         self.errors = self.meas_inliers - self.ransac_pred
-        self.error_var = np.var(self.errors)
+        #self.error_var = np.var(self.errors)
 
-        # TODO: Testing
-        self.ransac_pred2 = self.ransac.predict(self.distance.reshape(-1,1))
-        self.errors2 = self.measurement - self.ransac_pred2
-        self.error_var2 = np.var(self.errors2)
-        self.error_var = self.error_var2
+        self.model_pred = self.ransac.predict(self.distance.reshape(-1,1))
+        self.model_err = self.measurement - self.model_pred
+        self.model_err_var = np.var(self.model_err)
+        self.error_var = self.model_err_var
 
         bin_dist = 0.1
         s = 0
