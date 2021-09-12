@@ -24,6 +24,9 @@ from sklearn.linear_model import RANSACRegressor
 from scipy.interpolate import splev, splrep
 from scipy.stats import median_abs_deviation
 from sklearn.metrics import mean_squared_error
+import pickle
+import os
+import errno
 
 from utils import find_nearest_index
 
@@ -51,7 +54,19 @@ class Ir3Regressor(object):
         return mean_squared_error(y, self.predict(X))
 
 class Ir3Sensor(object):
-    def __init__(self, distance, measurement, should_plot = False):
+    def __init__(self, distance = [], measurement = [], use_saved = True, should_plot = False):
+        try:
+            os.mkdir('data')
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+        self.pickle_loc = 'data/ir3.pckl'
+
+        if(use_saved):
+            with open(self.pickle_loc, "rb") as f:
+                self.model_spline, self.err_spline, self.dist_min, self.dist_max = pickle.load(f)
+                return
+
         self.distance = distance
         self.measurement = measurement
         self.dist_min = np.min(self.distance)
@@ -60,7 +75,7 @@ class Ir3Sensor(object):
         self.ransac = RANSACRegressor(Ir3Regressor(), random_state=0, min_samples=1000,residual_threshold=(median_abs_deviation(self.measurement)+0.5))
 
         self.ransac.fit(self.distance.reshape(-1,1), self.measurement)
-        self.spline = self.ransac.estimator_.spline
+        self.model_spline = self.ransac.estimator_.spline
         self.inlier_mask = self.ransac.inlier_mask_
         self.outlier_mask = np.logical_not(self.inlier_mask)
 
@@ -95,6 +110,10 @@ class Ir3Sensor(object):
         self.err_spline = splrep(self.bin_err_var_x, self.bin_err_var)
         self.err_spline_y = splev(self.err_spline_x, self.err_spline)
 
+        pickle_data = [self.model_spline, self.err_spline, self.dist_min, self.dist_max]
+        with open(self.pickle_loc, "wb") as f:
+            pickle.dump(pickle_data, f)
+
         if(should_plot):
             self.plots_init()
             self.plots_draw()
@@ -106,13 +125,10 @@ class Ir3Sensor(object):
         if(x_0 > self.dist_max):
             x_0 = self.dist_max
 
-        h_x0 = splev(x_0, self.spline)
-        h_derv_x0 = spalde(x_0, self.spline)[1]
+        h_x0 = splev(x_0, self.model_spline)
+        h_derv_x0 = spalde(x_0, self.model_spline)[1]
         c = h_derv_x0
         d = h_x0 - x_0 * h_derv_x0
-
-        self.test_x = np.linspace(0, 1, 100)
-        self.test_y = c * self.test_x + d
 
         x_est = (z - h_x0)/h_derv_x0 + x_0
 
@@ -124,8 +140,8 @@ class Ir3Sensor(object):
         if(x_0 > self.dist_max):
             x_0 = self.dist_max
 
-        h_x0 = splev(x_0, self.spline)
-        h_derv_x0 = spalde(x_0, self.spline)[1]
+        h_x0 = splev(x_0, self.model_spline)
+        h_derv_x0 = spalde(x_0, self.model_spline)[1]
 
         c = h_derv_x0
         d = h_x0 - x_0 * h_derv_x0
@@ -160,7 +176,6 @@ class Ir3Sensor(object):
         self.err_ax[1].hist(self.model_err, 100)
 
         self.sensor_ax.plot(self.distance, self.measurement, '.')
-        self.sensor_ax.plot(self.test_x, self.test_y)
         self.sensor_ax.plot(self.dist_inliers, self.model_pred, color='red', linewidth=2)
 
         self.bin_err.plot(self.bin_err_var_x, self.bin_err_var)
@@ -174,7 +189,7 @@ if __name__ == "__main__":
     index, time_data, distance, velocity_command, \
         raw_ir1, raw_ir2, raw_ir3, raw_ir4, sonar1, sonar2 = data.T
 
-    ir3_sen = Ir3Sensor(distance, raw_ir3, should_plot=False)
+    ir3_sen = Ir3Sensor(distance, raw_ir3, use_saved=False, should_plot=True)
     print(ir3_sen.x_est_mle(3.12, 0.1))
     print("Error Variance: ", ir3_sen.model_err_var)
 

@@ -23,6 +23,9 @@ from sklearn.linear_model import RANSACRegressor
 from scipy.interpolate import splev, splrep
 from scipy.interpolate.fitpack import spalde
 from sklearn.metrics import mean_squared_error
+import pickle
+import os
+import errno
 
 from utils import find_nearest_index
 
@@ -50,7 +53,19 @@ class Ir4Regressor(object):
         return mean_squared_error(y, self.predict(X))
 
 class Ir4Sensor(object):
-    def __init__(self, distance, measurement, should_plot = False):
+    def __init__(self, distance = [], measurement = [], use_saved = True, should_plot = False):
+        try:
+            os.mkdir('data')
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+        self.pickle_loc = 'data/ir4.pckl'
+
+        if(use_saved):
+            with open(self.pickle_loc, "rb") as f:
+                self.model_spline, self.err_spline, self.dist_min, self.dist_max = pickle.load(f)
+                return
+
         self.distance = distance
         self.measurement = measurement
         self.dist_min = np.min(self.distance)
@@ -59,7 +74,7 @@ class Ir4Sensor(object):
         self.ransac = RANSACRegressor(Ir4Regressor(), random_state=0, min_samples=1000)
 
         self.ransac.fit(self.distance.reshape(-1,1), self.measurement)
-        self.spline = self.ransac.estimator_.spline
+        self.model_spline = self.ransac.estimator_.spline
         self.inlier_mask = self.ransac.inlier_mask_
         self.outlier_mask = np.logical_not(self.inlier_mask)
 
@@ -94,6 +109,10 @@ class Ir4Sensor(object):
         self.err_spline = splrep(self.bin_err_var_x, self.bin_err_var)
         self.err_spline_y = splev(self.err_spline_x, self.err_spline)
 
+        pickle_data = [self.model_spline, self.err_spline, self.dist_min, self.dist_max]
+        with open(self.pickle_loc, "wb") as f:
+            pickle.dump(pickle_data, f)
+
         if(should_plot):
             self.plots_init()
             self.plots_draw()
@@ -105,8 +124,8 @@ class Ir4Sensor(object):
         if(x_0 > self.dist_max):
             x_0 = self.dist_max
 
-        h_x0 = splev(x_0, self.spline)
-        h_derv_x0 = spalde(x_0, self.spline)[1]
+        h_x0 = splev(x_0, self.model_spline)
+        h_derv_x0 = spalde(x_0, self.model_spline)[1]
         c = h_derv_x0
         d = h_x0 - x_0 * h_derv_x0
 
@@ -123,8 +142,8 @@ class Ir4Sensor(object):
         if(x_0 > self.dist_max):
             x_0 = self.dist_max
 
-        h_x0 = splev(x_0, self.spline)
-        h_derv_x0 = spalde(x_0, self.spline)[1]
+        h_x0 = splev(x_0, self.model_spline)
+        h_derv_x0 = spalde(x_0, self.model_spline)[1]
 
         c = h_derv_x0
         d = h_x0 - x_0 * h_derv_x0
@@ -172,7 +191,7 @@ if __name__ == "__main__":
     index, time_data, distance, velocity_command, \
         raw_ir1, raw_ir2, raw_ir3, raw_ir4, sonar1, sonar2 = data.T
 
-    ir4_sen = Ir4Sensor(distance, raw_ir4, should_plot=True)
+    ir4_sen = Ir4Sensor(distance, raw_ir4, use_saved=False, should_plot=True)
     print("Error Variance: ", ir4_sen.model_err_var)
 
     plt.show()

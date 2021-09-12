@@ -19,6 +19,9 @@
 ################################################################################
 import numpy as np
 import matplotlib.pyplot as plt
+import pickle
+import os
+import errno
 
 ################################################################################
 #
@@ -26,7 +29,20 @@ import matplotlib.pyplot as plt
 #
 ################################################################################
 class MotionModel(object):
-    def __init__(self, distance, time, velocity_command, training_no=1, plot=False):
+    def __init__(self, distance = [], time = [], velocity_command = [], use_saved = True, training_no = 1, plot = False):
+        try:
+            os.mkdir('data')
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+
+        self.pickle_loc = 'data/motion_model.pckl'
+
+        if(use_saved):
+            with open(self.pickle_loc, "rb") as f:
+                self.process_noise_var = pickle.load(f)
+                return
+
         self.distance = distance
         self.time = time
         self.velocity_cmd = velocity_command
@@ -40,11 +56,19 @@ class MotionModel(object):
         self.process_noise_var = np.var(self.process_noise)   # sigma_squared_w
         self.predicted_dist = self.curr_dist + self.motion_model + self.process_noise # x_n = x_n_1 + g + w_n
         self.training_no = training_no
+
+        pickle_data = self.process_noise_var
+        with open(self.pickle_loc, "wb") as f:
+            pickle.dump(pickle_data, f)
+ 
         # Handle plotting
         if(plot):
             self.plots_init()
             self.plots_grid_init()
             self.plot_hist()
+    
+    def get_variance(self):
+        return self.process_noise_var
 
     def plots_init(self):
         self.fig, self.axes = plt.subplots(2)
@@ -111,24 +135,24 @@ class MotionModel(object):
         
 
 if __name__ == "__main__":
-    filename_c = '../../res/sensor_fusion/calibration.csv'
-    data_c = np.loadtxt(filename_c, delimiter=',', skiprows=1)
+    file_c = '../../res/sensor_fusion/calibration.csv'
+    data_c = np.loadtxt(file_c, delimiter=',', skiprows=1)
     index_c, time_c, distance_c, velocity_command_c, raw_ir1_c, raw_ir2_c, raw_ir3_c, raw_ir4_c, \
         sonar1_c, sonar2_c = data_c.T
 
-    filename_t1 = '../../res/sensor_fusion/calibration.csv'
-    data_t1 = np.loadtxt(filename_t1, delimiter=',', skiprows=1)
+    file_t1 = '../../res/sensor_fusion/training1.csv'
+    data_t1 = np.loadtxt(file_t1, delimiter=',', skiprows=1)
     index_t1, time_t1, distance_t1, velocity_command_t1, raw_ir1_t1, raw_ir2_t1, raw_ir3_t1, raw_ir4_t1, \
         sonar1_t1, sonar2_t1 = data_t1.T
 
-    filename_t2 = '../../res/sensor_fusion/calibration.csv'
-    data_t2 = np.loadtxt(filename_t2, delimiter=',', skiprows=1)
+    file_t2 = '../../res/sensor_fusion/training2.csv'
+    data_t2 = np.loadtxt(file_t2, delimiter=',', skiprows=1)
     index_t2, time_t2, distance_t2, velocity_command_t2, raw_ir1_t2, raw_ir2_t2, raw_ir3_t2, raw_ir4_t2, \
         sonar1_t2, sonar2_t2 = data_t2.T
 
-    motion_model_plot_c = MotionModel(distance_c, time_c, velocity_command_c, training_no=1, plot=True)
-    motion_model_plot_t1 = MotionModel(distance_t1, time_t1, velocity_command_t1, training_no=1, plot=True)
-    motion_model_plot_t2 = MotionModel(distance_t2, time_t2, velocity_command_t2, training_no=2, plot=True)
+    motion_model_plot_c = MotionModel(distance_c, time_c, velocity_command_c, use_saved=False, training_no=1, plot=True)
+    motion_model_plot_t1 = MotionModel(distance_t1, time_t1, velocity_command_t1, use_saved=False, training_no=1, plot=True)
+    motion_model_plot_t2 = MotionModel(distance_t2, time_t2, velocity_command_t2, use_saved=False, training_no=2, plot=True)
 
     print("Calibration Process Variance: ", motion_model_plot_c.process_noise_var)
     print("Training 1 Process Variance: ", motion_model_plot_t1.process_noise_var)

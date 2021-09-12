@@ -20,14 +20,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+from motion_model import MotionModel
 from sonar1 import Sonar1Sensor
 from ir3 import Ir3Sensor
 from ir4 import Ir4Sensor
-
-filename_c = '../../res/sensor_fusion/calibration.csv'
-data_c = np.loadtxt(filename_c, delimiter=',', skiprows=1)
-index_c, time_c, distance_c, velocity_command_c, raw_ir1_c, raw_ir2_c, raw_ir3_c, raw_ir4_c, \
-    sonar1_c, sonar2_c = data_c.T
 
 # Load data
 filename = '../../res/sensor_fusion/training1.csv'
@@ -43,7 +39,6 @@ index, time, velocity_command, raw_ir1, raw_ir2, raw_ir3, raw_ir4, \
      sonar1, sonar2 = data.T
 '''
 
-
 step_num = np.size(index)
 
 #motion_model_var = 1.8 * 10 ** -7
@@ -52,9 +47,10 @@ step_num = np.size(index)
 
 motion_model_var = 6 * 10 ** -6
 
-sonar1_sen = Sonar1Sensor(distance_c, sonar1_c)
-ir3_sen = Ir3Sensor(distance_c, raw_ir3_c)
-ir4_sen = Ir4Sensor(distance_c, raw_ir4_c)
+sonar1_sen = Sonar1Sensor()
+ir3_sen = Ir3Sensor()
+ir4_sen = Ir4Sensor()
+motion_model = MotionModel()
 
 mean_est = np.zeros(step_num)
 plot_k = np.zeros(step_num)

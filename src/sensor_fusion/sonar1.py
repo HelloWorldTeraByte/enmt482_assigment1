@@ -22,11 +22,27 @@ import matplotlib.pyplot as plt
 from sklearn.linear_model import RANSACRegressor
 from scipy.interpolate import splrep, splev
 from scipy.stats import median_abs_deviation
+import pickle
+import os
+import errno
 
 from utils import find_nearest_index
 
 class Sonar1Sensor(object):
-    def __init__(self, distance, measurement, should_plot = False):
+    def __init__(self, distance = [], measurement = [], use_saved = True, should_plot = False):
+        try:
+            os.mkdir('data')
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+
+        self.pickle_loc = 'data/sonar1.pckl'
+
+        if(use_saved):
+            with open(self.pickle_loc, "rb") as f:
+                self.model_c, self.model_d, self.err_spline = pickle.load(f)
+                return
+
         self.distance = distance
         self.measurement = measurement
         self.dist_min = np.min(self.distance)
@@ -73,17 +89,24 @@ class Sonar1Sensor(object):
         self.err_spline = splrep(self.bin_err_var_x, self.bin_err_var)
         self.err_spline_y = splev(self.err_spline_x, self.err_spline)
 
+        self.model_d = self.ransac.estimator_.intercept_
+        self.model_c = self.ransac.estimator_.coef_[0]
+
+        pickle_data = [self.model_c, self.model_d, self.err_spline]
+        with open(self.pickle_loc, "wb") as f:
+            pickle.dump(pickle_data, f)
+ 
         if(should_plot):
             self.plots_init()
             self.plots_draw()
 
     def x_est_mle(self, z):
-        x_est = (z - self.ransac.estimator_.intercept_) / self.ransac.estimator_.coef_[0]
+        x_est = (z - self.model_d) / self.model_c
         return x_est
 
     def var_estimator(self, x):
         #var = self.error_var / (self.ransac.estimator_.coef_[0] ** 2)
-        var = splev(x, self.err_spline) / (self.ransac.estimator_.coef_[0] ** 2)
+        var = splev(x, self.err_spline) / (self.model_c ** 2)
         return var
  
     def plots_init(self):
@@ -121,7 +144,7 @@ if __name__ == "__main__":
     index, time_data, distance, velocity_command, \
         raw_ir1, raw_ir2, raw_ir3, raw_ir4, sonar1, sonar2 = data.T
 
-    sonar1_sen = Sonar1Sensor(distance, sonar1, should_plot=True)
+    sonar1_sen = Sonar1Sensor(distance, sonar1, use_saved=False, should_plot=True)
     print("Error Variance: ", sonar1_sen.model_error_var)
 
     plt.show()
