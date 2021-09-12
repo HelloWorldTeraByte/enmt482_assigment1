@@ -169,7 +169,7 @@ class Ir4Sensor(object):
         self.bin_err.plot(self.err_spline_x, self.err_spline_y)
 
 if __name__ == "__main__":
-    filename = '/home/helloworldterabyte/projects/enmt482-2021_robotic_assignment/data/calibration.csv'
+    filename = '../../res/sensor_fusion/calibration.csv'
     data = np.loadtxt(filename, delimiter=',', skiprows=1)
 
     # Split into columns

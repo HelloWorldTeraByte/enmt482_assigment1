@@ -24,23 +24,20 @@ from sonar1 import Sonar1Sensor
 from ir3 import Ir3Sensor
 from ir4 import Ir4Sensor
 
-filename_c = '/home/helloworldterabyte/projects/enmt482-2021_robotic_assignment/data/calibration.csv'
-#filename_c = '../data/calibration.csv'
+filename_c = '../../res/sensor_fusion/calibration.csv'
 data_c = np.loadtxt(filename_c, delimiter=',', skiprows=1)
 index_c, time_c, distance_c, velocity_command_c, raw_ir1_c, raw_ir2_c, raw_ir3_c, raw_ir4_c, \
     sonar1_c, sonar2_c = data_c.T
 
 # Load data
-filename = '/home/helloworldterabyte/projects/enmt482-2021_robotic_assignment/data/training2.csv'
-#filename = '../data/training1.csv'
+filename = '../../res/sensor_fusion/training1.csv'
 data = np.loadtxt(filename, delimiter=',', skiprows=1)
 # Split into columns
 index, time, distance, velocity_command, raw_ir1, raw_ir2, raw_ir3, raw_ir4, \
     sonar1, sonar2 = data.T
 
 '''
-filename = '/home/helloworldterabyte/projects/enmt482-2021_robotic_assignment/data/test.csv'
-
+filename = '../../res/sensor_fusion/training1.csv'
 data = np.loadtxt(filename, delimiter=',', skiprows=1)
 index, time, velocity_command, raw_ir1, raw_ir2, raw_ir3, raw_ir4, \
      sonar1, sonar2 = data.T

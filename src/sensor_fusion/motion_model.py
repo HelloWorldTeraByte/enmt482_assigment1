@@ -111,17 +111,17 @@ class MotionModel(object):
         
 
 if __name__ == "__main__":
-    filename_c = '../data/calibration.csv'
+    filename_c = '../../res/sensor_fusion/calibration.csv'
     data_c = np.loadtxt(filename_c, delimiter=',', skiprows=1)
     index_c, time_c, distance_c, velocity_command_c, raw_ir1_c, raw_ir2_c, raw_ir3_c, raw_ir4_c, \
         sonar1_c, sonar2_c = data_c.T
 
-    filename_t1 = '../data/training1.csv'
+    filename_t1 = '../../res/sensor_fusion/calibration.csv'
     data_t1 = np.loadtxt(filename_t1, delimiter=',', skiprows=1)
     index_t1, time_t1, distance_t1, velocity_command_t1, raw_ir1_t1, raw_ir2_t1, raw_ir3_t1, raw_ir4_t1, \
         sonar1_t1, sonar2_t1 = data_t1.T
 
-    filename_t2 = '../data/training2.csv'
+    filename_t2 = '../../res/sensor_fusion/calibration.csv'
     data_t2 = np.loadtxt(filename_t2, delimiter=',', skiprows=1)
     index_t2, time_t2, distance_t2, velocity_command_t2, raw_ir1_t2, raw_ir2_t2, raw_ir3_t2, raw_ir4_t2, \
         sonar1_t2, sonar2_t2 = data_t2.T
