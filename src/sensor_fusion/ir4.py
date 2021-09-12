@@ -63,7 +63,10 @@ class Ir4Sensor(object):
 
         if(use_saved):
             with open(self.pickle_loc, "rb") as f:
-                self.model_spline, self.err_spline, self.dist_min, self.dist_max = pickle.load(f)
+                self.model_spline,\
+                self.err_spline,\
+                self.dist_min,\
+                self.dist_max = pickle.load(f)
                 return
 
         self.distance = distance
@@ -71,7 +74,9 @@ class Ir4Sensor(object):
         self.dist_min = np.min(self.distance)
         self.dist_max = np.max(self.distance)
 
-        self.ransac = RANSACRegressor(Ir4Regressor(), random_state=0, min_samples=1000)
+        self.ransac = RANSACRegressor(Ir4Regressor(),
+        random_state=0,
+        min_samples=1000)
 
         self.ransac.fit(self.distance.reshape(-1,1), self.measurement)
         self.model_spline = self.ransac.estimator_.spline
@@ -177,8 +182,12 @@ class Ir4Sensor(object):
         self.err_ax[0].scatter(self.dist_inliers, self.model_err)
         self.err_ax[1].hist(self.model_err, 100)
 
-        self.sensor_ax.plot(self.distance, self.measurement, '.')
-        self.sensor_ax.plot(self.dist_inliers, self.model_pred, color='red', linewidth=2)
+        self.sensor_ax.plot(self.distance, self.measurement, '.', label='Measurments')
+        self.sensor_ax.plot(self.dist_inliers, self.model_pred, color='red', linewidth=2, label='Model')
+        self.sensor_ax.set_title('IR4 Sensor Model')
+        self.sensor_ax.set_xlabel('Distance')
+        self.sensor_ax.set_ylabel('Measurement')
+        self.sensor_ax.legend(loc='upper right')
 
         self.bin_err.plot(self.bin_err_var_x, self.bin_err_var)
         self.bin_err.plot(self.err_spline_x, self.err_spline_y)

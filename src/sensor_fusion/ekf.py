@@ -13,9 +13,12 @@
 # Date created:       31/08/2021
 # Date Last Modified: 31/08/2021
 ################################################################################
-#  Module Description:
-#
-#
+# Module Description:
+# !Make sure to run all of the sensor scripts before running this script
+# !as the parameters are only loaded from 'data/*' files in this module
+# The parameters such as sensor model is calculated before by running each
+# sensor model python script. The model and parameters only loaded in this
+# module
 ################################################################################
 import numpy as np
 import matplotlib.pyplot as plt
@@ -26,7 +29,7 @@ from ir3 import Ir3Sensor
 from ir4 import Ir4Sensor
 
 # Load data
-filename = '../../res/sensor_fusion/training1.csv'
+filename = '../../res/sensor_fusion/training2.csv'
 data = np.loadtxt(filename, delimiter=',', skiprows=1)
 # Split into columns
 index, time, distance, velocity_command, raw_ir1, raw_ir2, raw_ir3, raw_ir4, \
@@ -41,16 +44,16 @@ index, time, velocity_command, raw_ir1, raw_ir2, raw_ir3, raw_ir4, \
 
 step_num = np.size(index)
 
-#motion_model_var = 1.8 * 10 ** -7
-#motion_model_var = 2.4 * 10 ** -6
-#motion_model_var = 6.1 * 10 ** -6
-
-motion_model_var = 6 * 10 ** -6
-
 sonar1_sen = Sonar1Sensor()
 ir3_sen = Ir3Sensor()
 ir4_sen = Ir4Sensor()
 motion_model = MotionModel()
+
+#motion_model_var = motion_model.get_variance()
+#motion_model_var = 1.8 * 10 ** -7
+#motion_model_var = 2.4 * 10 ** -6
+#motion_model_var = 6.1 * 10 ** -6
+motion_model_var = 6 * 10 ** -6
 
 mean_est = np.zeros(step_num)
 plot_k = np.zeros(step_num)
@@ -129,6 +132,4 @@ plt.plot(plot_meas_var[10:-1], label='Measurement Variance')
 plt.plot(plot_motion_var[10:-1] , label='Motion Model Variance')
 plt.legend(loc='upper right')
 
-
-print('Average Kalman Gain:', np.average(plot_k))
 plt.show()
