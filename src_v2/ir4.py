@@ -24,7 +24,7 @@ from scipy.interpolate import splev, splrep
 from scipy.interpolate.fitpack import spalde
 from sklearn.metrics import mean_squared_error
 
-from util import find_nearest_index
+from utils import find_nearest_index
 
 ir4_smooth_val = 50
 
@@ -121,7 +121,7 @@ class Ir4Sensor(object):
 
         return x_est
 
-    def var_estimator_at_x0(self, x_0):
+    def var_estimator(self, x_0):
         if(x_0 < self.dist_min):
             x_0 = self.dist_min
         if(x_0 > self.dist_max):
@@ -137,11 +137,10 @@ class Ir4Sensor(object):
 
         var = var_sen / (c ** 2)
 
-        return var
-
         if(x_0 < 1):
             var = 10
 
+        return var
  
     def plots_init(self):
         self.liers_fig, self.liers_ax = plt.subplots()

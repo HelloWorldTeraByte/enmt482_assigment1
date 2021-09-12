@@ -23,7 +23,7 @@ from sklearn.linear_model import RANSACRegressor
 from scipy.interpolate import splrep, splev
 from scipy.stats import median_abs_deviation
 
-from util import find_nearest_index
+from utils import find_nearest_index
 
 class Sonar1Sensor(object):
     def __init__(self, distance, measurement, should_plot = False):
@@ -79,7 +79,7 @@ class Sonar1Sensor(object):
             self.plots_draw()
 
     def x_est_mle(self, z):
-        x_est = (z - self.ransac.estimator_.intercept_)/self.ransac.estimator_.coef_[0]
+        x_est = (z - self.ransac.estimator_.intercept_) / self.ransac.estimator_.coef_[0]
         return x_est
 
     def var_estimator(self, x):

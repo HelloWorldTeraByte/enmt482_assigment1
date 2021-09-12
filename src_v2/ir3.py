@@ -26,7 +26,7 @@ from scipy.interpolate import splev, splrep
 from scipy.stats import median_abs_deviation
 from sklearn.metrics import mean_squared_error
 
-from util import find_nearest_index
+from utils import find_nearest_index
 
 ir3_smooth_val = 20
 
@@ -148,7 +148,7 @@ class Ir3Sensor(object):
 
         return x_est
 
-    def var_estimator_at_x0(self, x_0):
+    def var_estimator(self, x_0):
         if(x_0 < self.dist_min):
             x_0 = self.dist_min
         if(x_0 > self.dist_max):
@@ -164,10 +164,10 @@ class Ir3Sensor(object):
 
         var = var_sen / (c ** 2)
 
-        return var
-
         if(x_0 < 0.1 or x_0 > 1):
             var = 10
+
+        return var
     
     def plots_init(self):
         self.liers_fig, self.liers_ax = plt.subplots()

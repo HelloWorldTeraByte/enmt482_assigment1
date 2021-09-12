@@ -83,19 +83,19 @@ for n in range(1, step_num):
     ir4_est = ir4_sen.x_est_mle(raw_ir4[n], mean_x_prior)
 
     a = sonar1_sen.var_estimator(mean_x_prior)
-    b = ir3_sen.var_estimator_at_x0(mean_x_prior)
-    c = ir4_sen.var_estimator_at_x0(mean_x_prior)
+    b = ir3_sen.var_estimator(mean_x_prior)
+    c = ir4_sen.var_estimator(mean_x_prior)
 
-    w1 = 1 / sonar1_sen.var_estimator(mean_x_prior) / (1 / sonar1_sen.var_estimator(mean_x_prior) + 1 / ir3_sen.var_estimator_at_x0(mean_x_prior) + 1 / ir4_sen.var_estimator_at_x0(mean_x_prior))
-    w2 = 1 / ir3_sen.var_estimator_at_x0(mean_x_prior) / (1 / sonar1_sen.var_estimator(mean_x_prior) + 1 / ir3_sen.var_estimator_at_x0(mean_x_prior) + 1 / ir4_sen.var_estimator_at_x0(mean_x_prior))
-    w3 = 1 / ir4_sen.var_estimator_at_x0(mean_x_prior) / (1 / sonar1_sen.var_estimator(mean_x_prior) + 1 / ir3_sen.var_estimator_at_x0(mean_x_prior) + 1 / ir4_sen.var_estimator_at_x0(mean_x_prior))
+    w1 = 1 / sonar1_sen.var_estimator(mean_x_prior) / (1 / sonar1_sen.var_estimator(mean_x_prior) + 1 / ir3_sen.var_estimator(mean_x_prior) + 1 / ir4_sen.var_estimator(mean_x_prior))
+    w2 = 1 / ir3_sen.var_estimator(mean_x_prior) / (1 / sonar1_sen.var_estimator(mean_x_prior) + 1 / ir3_sen.var_estimator(mean_x_prior) + 1 / ir4_sen.var_estimator(mean_x_prior))
+    w3 = 1 / ir4_sen.var_estimator(mean_x_prior) / (1 / sonar1_sen.var_estimator(mean_x_prior) + 1 / ir3_sen.var_estimator(mean_x_prior) + 1 / ir4_sen.var_estimator(mean_x_prior))
 
     plot_w1[n] = w1
     plot_w2[n] = w2
     plot_w3[n] = w3
 
     mean_x_meas = w1 * sonar1_est + w2 * ir3_est + w3 * ir4_est
-    var_x_meas = 1 / (1 / sonar1_sen.var_estimator(mean_x_prior) + 1 / ir3_sen.var_estimator_at_x0(mean_x_prior) + 1 / ir4_sen.var_estimator_at_x0(mean_x_prior) )
+    var_x_meas = 1 / (1 / sonar1_sen.var_estimator(mean_x_prior) + 1 / ir3_sen.var_estimator(mean_x_prior) + 1 / ir4_sen.var_estimator(mean_x_prior) )
 
     plot_meas_var[n] = var_x_meas
     plot_motion_var[n] = var_x_prior
@@ -109,13 +109,6 @@ for n in range(1, step_num):
         mean_x_posterior = 0.1
     if(mean_x_posterior > 3):
         mean_x_posterior = 3
-
-
-    '''
-    K = var_x_prior / ( var_x_meas + var_x_prior )
-    mean_x_posterior = mean_x_prior + K * ( mean_x_meas - mean_x_prior)
-    var_x_posterior = (1 - K) * var_x_prior
-    '''
 
     mean_est[n] = mean_x_posterior
     plot_k[n] = K
