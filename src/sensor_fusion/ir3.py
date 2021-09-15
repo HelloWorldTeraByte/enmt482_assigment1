@@ -115,6 +115,7 @@ class Ir3Sensor(object):
             self.bin_err_var[i] = np.var(bin_err)
             s = e
             e = e + bin_dist
+            s_ind = find_nearest_index(self.distance, s)
 
         self.err_spline_x = np.linspace(self.dist_min, self.dist_max, 100)
         self.err_spline = splrep(self.bin_err_var_x, self.bin_err_var)
@@ -199,7 +200,8 @@ class Ir3Sensor(object):
 
 
 if __name__ == "__main__":
-    filename = '../../res/sensor_fusion/calibration.csv'
+    filename = '/home/helloworldterabyte/projects/enmt482-2021_robotic_assignment/res/sensor_fusion/calibration.csv'
+    #filename = '../../res/sensor_fusion/calibration.csv'
     data = np.loadtxt(filename, delimiter=',', skiprows=1)
 
     # Split into columns

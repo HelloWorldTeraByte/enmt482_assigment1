@@ -109,6 +109,7 @@ class Ir4Sensor(object):
             self.bin_err_var[i] = np.var(bin_err)
             s = e
             e = e + bin_dist
+            s_ind = find_nearest_index(self.distance, s)
 
         self.err_spline_x = np.linspace(self.dist_min, self.dist_max, 100)
         self.err_spline = splrep(self.bin_err_var_x, self.bin_err_var)
