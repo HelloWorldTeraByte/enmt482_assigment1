@@ -54,7 +54,12 @@ class MotionModel(object):
         self.motion_model = self.curr_cmd_velocity * self.dt    # g = u_n_1 * dt
         self.process_noise = self.next_dist - self.curr_dist - self.motion_model # w_n = x_n - x_n_1 - g
         self.process_noise_var = np.var(self.process_noise)   # sigma_squared_w
-        self.predicted_dist = self.curr_dist + self.motion_model + self.process_noise # x_n = x_n_1 + g + w_n
+        #self.predicted_dist = self.curr_dist + self.motion_model + self.process_noise # x_n = x_n_1 + g + w_n
+
+        self.predicted_dist = np.zeros(np.size(self.time))
+        for i in range(1, np.size(self.time)):
+            self.predicted_dist[i] = self.predicted_dist[i-1] + self.velocity_cmd[i] * (time[i] - time[i-1])
+
         self.training_no = training_no
 
         pickle_data = self.process_noise_var
@@ -79,8 +84,8 @@ class MotionModel(object):
         self.axes[0].set_xlabel('Time (s)')
         self.axes[0].set_ylabel('Speed (m/s)')
 
-        self.axes[1].plot(self.time[0:-1], self.predicted_dist, color='blue', alpha=0.2)
-        self.axes[1].plot(self.time[0:-1], self.next_dist, color='blue', alpha=0.2)
+        self.axes[1].plot(self.time, self.predicted_dist, label='Estimated Distance')
+        self.axes[1].plot(self.time, self.distance, label='True Distance')
         self.axes[1].set_title('Estimated Distance')
         self.axes[1].set_xlabel('Time (s)')
         self.axes[1].set_ylabel('Distance (m)')
