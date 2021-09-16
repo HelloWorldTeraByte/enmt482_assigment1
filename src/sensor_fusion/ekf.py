@@ -14,8 +14,9 @@
 # Date Last Modified: 31/08/2021
 ################################################################################
 # Module Description:
-# !Make sure to run all of the sensor scripts before running this script
-# !as the parameters are only loaded from 'data/*' files in this module
+#! Make sure that there are sensor data in the 'data/*' directory.
+#! If not run all of the sensor scripts before running this script
+#! as the parameters are only loaded from 'data/*' files in this module
 # The parameters such as sensor model is calculated before by running each
 # sensor model python script. The model and parameters only loaded in this
 # module
@@ -36,7 +37,7 @@ index, time, distance, velocity_command, raw_ir1, raw_ir2, raw_ir3, raw_ir4, \
     sonar1, sonar2 = data.T
 
 '''
-filename = '../../res/sensor_fusion/training1.csv'
+filename = '../../res/sensor_fusion/test.csv'
 data = np.loadtxt(filename, delimiter=',', skiprows=1)
 index, time, velocity_command, raw_ir1, raw_ir2, raw_ir3, raw_ir4, \
      sonar1, sonar2 = data.T
@@ -57,6 +58,7 @@ motion_model_var = 6 * 10 ** -6
 
 mean_est = np.zeros(step_num)
 plot_k = np.zeros(step_num)
+plot_var = np.zeros(step_num)
 plot_w1 = np.zeros(step_num)
 plot_w2 = np.zeros(step_num)
 plot_w3 = np.zeros(step_num)
@@ -71,7 +73,6 @@ for n in range(1, step_num):
     # Predict
     mean_x_prior = mean_x_posterior + velocity_command[n] * (time[n] - time[n-1])
     var_x_prior = var_x_posterior + motion_model_var
-    #print("Time at n", time[n], "Time at n-1", time[n-1], "dt", time[n] - time[n-1])
 
     # Update
     sonar1_est = sonar1_sen.x_est_mle(sonar1[n])
@@ -107,24 +108,34 @@ for n in range(1, step_num):
         mean_x_posterior = 3
 
     mean_est[n] = mean_x_posterior
+    plot_var[n] = var_x_posterior
     plot_k[n] = K
 
 fig1, ax1 = plt.subplots()
 plt.plot(distance, label='True Distance')
 #plt.plot(sonar2)
 #plt.plot(sonar1)
+#plt.plot(mean_est)
 plt.plot(mean_est, label='Estimated Distance')
-plt.plot(plot_k, label='Kalman Gain')
+plt.title('EKF Estimated Distance')
 plt.legend(loc='upper right')
+plt.xlabel('Time Step')
+plt.ylabel('Distance (m)')
 
 fig2, ax2 = plt.subplots()
-plt.plot(plot_k, label='Kalman Gain')
-plt.legend(loc='upper right')
+plt.plot(plot_var)
+plt.xlabel('Time Step')
+plt.ylabel('Variance')
+plt.title('Posterior Variance of EKF')
+#plt.legend(loc='upper right')
 
 fig3, ax3 = plt.subplots()
 plt.plot(plot_w1, label='Sonar Sensor Weight')
 plt.plot(plot_w2 , label='IR3 Sensor Weight')
 plt.plot(plot_w3 , label='IR4 Sensor Weight')
+plt.plot(plot_k , label='Kalman Gain')
+plt.xlabel('Time Step')
+plt.ylabel('Weight')
 plt.legend(loc='upper right')
 
 fig4, ax4 = plt.subplots()
