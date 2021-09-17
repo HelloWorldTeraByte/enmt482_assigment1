@@ -183,8 +183,10 @@ class Ir4Sensor(object):
         self.err_ax[0].scatter(self.dist_inliers, self.model_err)
         self.err_ax[1].hist(self.model_err, 100)
 
-        self.sensor_ax.plot(self.distance, self.measurement, '.', label='Measurments')
-        self.sensor_ax.plot(self.dist_inliers, self.model_pred, color='red', linewidth=2, label='Model')
+        self.sensor_ax.plot(self.distance, self.measurement,
+                            '.', label='Measurments')
+        self.sensor_ax.plot(self.dist_inliers, self.model_pred,
+                            color='red', linewidth=3, label='Model')
         self.sensor_ax.set_title('IR4 Sensor Model')
         self.sensor_ax.set_xlabel('Distance')
         self.sensor_ax.set_ylabel('Measurement')

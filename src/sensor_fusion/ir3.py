@@ -189,7 +189,7 @@ class Ir3Sensor(object):
         self.sensor_ax.plot(self.distance, self.measurement,
                             '.', label='Measurements')
         self.sensor_ax.plot(self.dist_inliers, self.model_pred,
-                            color='red', linewidth=2, label='Model')
+                            color='red', linewidth=3, label='Model')
         self.sensor_ax.set_title('IR3 Sensor Model')
         self.sensor_ax.set_xlabel('Distance')
         self.sensor_ax.set_ylabel('Measurement')
