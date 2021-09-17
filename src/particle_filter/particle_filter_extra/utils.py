@@ -48,30 +48,6 @@ def resample(particles, weights):
     weights[:] = 1
     return True
 
-def spread_particle(Nparticles, particle_pose, bound_limit):
-    """ function to spread particles
-    """
-    particle_pose = np.zeros((Nparticles, 3))
-
-    for m in range(Nparticles):
-        x = particle_pose[m,0]
-        y = particle_pose[m,1]
-        theta = particle_pose[m,2]
-
-        Xmin = x - bound_limit
-        Xmax = x + bound_limit
-        Ymin = y - bound_limit
-        Ymax = y + bound_limit
-        Tmin = theta - bound_limit
-        Tmax = theta + bound_limit
-    
-        particle_pose[m] = (uniform(Xmin, Xmax),
-                    uniform(Ymin, Ymax),
-                    uniform(Tmin, Tmax))
-    return particle_pose
-
-
-
 def is_degenerate(weights):
     """Return true if the particles are degenerate and need resampling."""
     
