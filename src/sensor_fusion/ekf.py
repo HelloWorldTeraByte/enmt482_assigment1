@@ -79,10 +79,6 @@ for n in range(1, step_num):
     ir3_est = ir3_sen.x_est_mle(raw_ir3[n], mean_x_prior)
     ir4_est = ir4_sen.x_est_mle(raw_ir4[n], mean_x_prior)
 
-    a = sonar1_sen.var_estimator(mean_x_prior)
-    b = ir3_sen.var_estimator(mean_x_prior)
-    c = ir4_sen.var_estimator(mean_x_prior)
-
     w1 = 1 / sonar1_sen.var_estimator(mean_x_prior) / (1 / sonar1_sen.var_estimator(mean_x_prior) + 1 / ir3_sen.var_estimator(mean_x_prior) + 1 / ir4_sen.var_estimator(mean_x_prior))
     w2 = 1 / ir3_sen.var_estimator(mean_x_prior) / (1 / sonar1_sen.var_estimator(mean_x_prior) + 1 / ir3_sen.var_estimator(mean_x_prior) + 1 / ir4_sen.var_estimator(mean_x_prior))
     w3 = 1 / ir4_sen.var_estimator(mean_x_prior) / (1 / sonar1_sen.var_estimator(mean_x_prior) + 1 / ir3_sen.var_estimator(mean_x_prior) + 1 / ir4_sen.var_estimator(mean_x_prior))
